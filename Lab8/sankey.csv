@@ -1,0 +1,10 @@
+source,target,value
+Barry,Elvis,2
+Frodo,Elvis,2
+Frodo,Sarah,5
+Barry,Alice,2
+Elvis,Sarah,5
+Elvis,Alice,10
+Sarah,Alice,4
+a,b,2
+b,Alice,12

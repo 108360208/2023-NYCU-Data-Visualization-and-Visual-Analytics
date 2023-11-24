@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Sankey Diagram</title>
+  <link rel="stylesheet" type="text/css" href="style.css"> 
+</head>
+
+<body>
+  <ul id="legend-list"></ul>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="sankey.js"></script>
+  <script>
+    color = d3.scaleOrdinal(d3.schemeCategory10);
+      var filename = "http://vis.lab.djosix.com:2023/data/car.data"
+      var keylist = ["buying", "maintenance", "doors", "persons", "luggage_boot", "safety", "class"]
+      
+      drawSankey(keylist, filename) 
+
+  </script>
+
+</body>
+

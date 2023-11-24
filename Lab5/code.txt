@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>Stacked Bar Chart (D3.js v4)</title>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+</head>
+<style>
+    #button-list {
+        display: none; /* 初始状态为折叠 */
+    }</style>
+<body>
+    <ul id="button-list"></ul>    
+    <button id="toggleButton">列表</button>  
+    <div id="chart"></div>
+    
+
+    <script>
+        function createStackedBarChart(data) {
+            d3.select("#chart").html("");
+            // 獲取用戶螢幕寬度和高度
+            var screenWidth = window.innerWidth;
+            var screenHeight = window.innerHeight;
+            var ratio_in_screen = 3 / 4;
+            
+            actualWidth = ratio_in_screen * screenWidth;
+            actualHeight = ratio_in_screen * screenHeight ;
+            var keys = ["scores_teaching", "scores_research", "scores_citations", "scores_industry_income", "scores_international_outlook"];
+
+            var margin = { top: 30, right: 30, bottom: 30, left: screenWidth/4 };
+            var width = actualWidth - margin.left - margin.right;
+            var height = actualHeight - margin.top - margin.bottom;
+
+            // 使用数据的长度除以10来确定要绘制多少个图表
+            var numCharts = Math.ceil(data.length / 8);
+
+            // 创建一个容器来容纳所有的图表
+            var container = d3.select("#chart").append("div");
+
+            for (var i = 0; i < numCharts; i++) {
+                var chartData = data.slice(i * 8, (i + 1) * 8); // 每次取10筆資料
+             
+                var svg = container.append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                //x軸顯示資料
+                var x = d3.scaleLinear()
+                    .domain([0, d3.max(chartData, function (d) { return d3.sum(keys, function (key) { return +d[key]; }); })])
+                    .nice()
+                    .range([0,width]);
+
+                var y =d3.scaleBand()
+                    .domain(chartData.map(function (d) {return d.name; }))
+                    .range([0, height])
+                    .padding(0.1);
+                // var x = d3.scaleBand()
+                //     .domain(chartData.map(function (d) { return d.name; }))
+                //     .range([0, width])
+                //     .padding(0.1);
+
+                // var y = d3.scaleLinear()
+                //     .domain([0, d3.max(chartData, function (d) { return d3.sum(keys, function (key) { return +d[key]; }); })])
+                //     .nice()
+                //     .range([height, 0]);
+
+                var color = d3.scaleOrdinal()
+                    .domain(keys)
+                    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56"]);
+
+                var stack = d3.stack()
+                    .keys(keys);
+
+                var stackedData = stack(chartData);
+                //console.log(stackedData)
+                //console.log(stackedData)
+                svg.selectAll("g")
+                    .data(stackedData)
+                    .enter().append("g")
+                    .attr("fill", function (d) { return color(d.key); })
+                    .selectAll("rect")
+                    .data(function (d) { return d; })
+                    .enter().append("rect")
+                    .attr("x", function (d) { return x(d[0]); })
+                    .attr("y", function (d) { return y(d.data.name); })
+                    .attr("height", y.bandwidth())
+                    .attr("width", function (d) { return x(d[1]) - x(d[0]); });
+
+                // 添加軸
+                svg.append("g")
+                    .attr("class", "x-axis")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(d3.axisBottom(x));
+
+                svg.append("g")
+                    .attr("class", "y-axis")
+                    .call(d3.axisLeft(y).ticks(5));
+                }
+        }
+
+
+        // 載入CSV數據
+        d3.csv("TIMES_WorldUniversityRankings_2024.csv", function(error, data) {
+            if (error) throw error;
+            //console.log(data)
+            // 使用d3.nest对数据进行分类
+            var keys = ["scores_teaching", "scores_research", "scores_citations", "scores_industry_income", "scores_international_outlook"]
+            var groupedData = d3.nest()
+            .key(function(d) {
+                var rank = d.rank.toString(); // 将rank转换为字符串以便处理
+                if (rank.match(/^[1-9]\d*$/)) {
+                // 匹配以数字开头的rank值，如1、2、3
+                return "1-200";
+                } else if (rank.match(/^=[1-9]\d*$/)) {
+                // 匹配以=和数字开头的rank值，如=3、=4
+                return "1-200";
+                } else if (rank.match(/\d+\D+\d+/)) {
+                    // 匹配形如201-400、401-600的rank值
+                    return rank;
+                } else if (rank === "Reporter") {
+                return "reporter";
+                } else {
+                // 其他情况，如1501+
+                return "1501+";
+                }
+            })
+            .entries(data)
+            //console.log(groupedData)
+            var buttonList = d3.select("#button-list");
+            // 创建可点击的按钮列表
+            var buttons = buttonList.selectAll("li")
+                .data(groupedData)
+                .enter()
+                .append("li")
+                .append("button") // 将文本列表更改为按钮
+                .text(function(d) {
+                    return d.key;
+                })
+                .on("click", function(d) {
+                    //console.log(d)
+                    var selectedKey = d.key;
+                    if (selectedKey == "1-200"){
+                        var filteredData = data.filter(function(dataPoint) {
+                            if(dataPoint.rank > 1 || dataPoint.rank < 200 || dataPoint.rank.includes("=")) {
+                                return dataPoint.rank
+                            }     
+                        });
+                    }
+                    else{
+                        var filteredData = data.filter(function(dataPoint) {
+                            return dataPoint.rank === selectedKey; // 根据选定的key筛选数据        
+                        });
+                    }
+                    createStackedBarChart(filteredData);
+           
+                });
+            var toggleButton = d3.select("#toggleButton");
+            // 初始状态为折叠
+            var isCollapsed = true;
+
+            // 监听折叠/展开按钮的点击事件
+            toggleButton.on("click", function() {
+                if (isCollapsed) {
+                    buttonList.style("display", "block"); // 展开列表
+                    isCollapsed = false;
+                    toggleButton.text("摺疊"); // 更新按钮文本
+                } else {
+                    buttonList.style("display", "none"); // 折叠列表
+                    isCollapsed = true;
+                    toggleButton.text("展開"); // 更新按钮文本
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>

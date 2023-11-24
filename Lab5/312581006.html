@@ -1,0 +1,306 @@
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8"/>
+        <title>Stacked Bar Chart (D3.js v4)</title>
+        <script src="https://d3js.org/d3.v4.min.js"></script>
+    </head>
+    <style>
+        #button-list {
+            display: none; /* 初始状态为折叠 */
+        }
+        .legend-color-box {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .header {
+            text-align: center;
+            padding: 10px 0;
+        }
+        #tooltips {
+            margin-top: 20px; /* 顶部间距 */
+            margin-bottom: 20px; /* 底部间距 */
+        }
+        .sort_button {
+            margin-right: 5px; /* 顶部间距 */
+        }
+        .fixed-tooltip {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: #ff6600;
+            color: #fff;
+            padding: 5px;
+            border: 1px solid #cc4400;
+            width: 8%; /* 使用百分比设置宽度 */
+            max-width: 300px; /* 设置最大宽度以避免过宽 */
+        }
+    </style>
+    <body>
+        <h1 class="header">LAB5 Stacked Bar Charts</h1>
+        <ul id="button-list"></ul>    
+        <button id="toggleButton">列表</button> 
+        <div id="tooltips"></div>
+        <div id="chart"></div>
+        <div id="legend" style="position: fixed; top: 20px; right: 20px; background-color: white; padding: 10px; border: 1px solid #ccc;">
+            <h4>Legend</h4>
+            <ul id="legend-list"></ul>
+        </div>
+        <div class="fixed-tooltip">
+            <h4>說明</h4>
+            <p>1.點擊列表，選擇不同排名區間的資料</p>
+            <p>2.透過重複點擊排序按鈕決定升序和降序!!!</p>     
+        </div>
+          
+        <script>
+            function createlegend(keys){
+                var color = d3.scaleOrdinal()
+                    .domain(keys)
+                    .range(d3.schemeCategory10);
+
+                var legendData = [
+                    { category: "Teaching", color: color("scores_teaching") },
+                    { category: "Research", color: color("scores_research") },
+                    { category: "Citations", color: color("scores_citations") },
+                    { category: "Industry Income", color: color("scores_industry_income") },
+                    { category: "International Outlook", color: color("scores_international_outlook") }
+                    ];
+    
+                    var legendContainer = d3.select("#legend-list");
+
+                var legendItems = legendContainer
+                .selectAll("li")
+                .data(legendData)
+                .enter()
+                .append("li");
+                
+                legendItems
+                .append("span")
+                .style("background-color", function(d) {
+                    return d.color;
+                })
+                .classed("legend-color-box", true);
+
+                legendItems
+                .append("span")
+                .text(function(d) {
+                    console.log(d.category)
+                    return d.category;
+                });
+
+            }
+            function createToolTips() {
+                var keys = ["scores_overall", "scores_teaching", "scores_research", "scores_citations", "scores_industry_income", "scores_international_outlook"];
+                var currentSortKey = keys[0]; // 初始排序键
+                var isAscending = true; // 初始排序顺序
+                // 创建按钮
+                d3.select("#tooltips")
+                    .selectAll("button")
+                    .data(keys)
+                    .enter()
+                    .append("button")
+                    .attr("class","sort_button")
+                    .attr("data-key", function(d) { return d; })
+                    .text(function(d) { return "Sorted by " + d; })
+                    .on('click', function() {
+                        var clickedSortKey = d3.select(this).attr("data-key");
+                        if (clickedSortKey === currentSortKey) {
+                            // 切换排序顺序
+                            isAscending = !isAscending;
+                        } else {
+                            // 如果点击了不同的排序键，升序排列
+                            isAscending = true;
+                            currentSortKey = clickedSortKey;
+                        }
+                        //console.log(filteredData)
+                        // 根据排序键和顺序重新排序数据
+                        filteredData.sort(function(a, b) {
+                            var order = isAscending ? 1 : -1;
+                            return order * (a[currentSortKey] - b[currentSortKey]);
+                        });
+                        createStackedBarChart(filteredData);
+                    });
+            }
+
+            function createStackedBarChart() {
+                d3.select("#chart").html("");
+                // 獲取用戶螢幕寬度和高度
+                var screenWidth = window.innerWidth;
+                var screenHeight = window.innerHeight;
+                var ratio_in_screen = 3 / 4;
+                
+                actualWidth = ratio_in_screen * screenWidth;
+                actualHeight = filteredData.length * screenHeight/30 ;
+                var keys = ["scores_teaching", "scores_research", "scores_citations", "scores_industry_income", "scores_international_outlook"];
+                createlegend(keys)
+                var margin = { top: 30, right: 30, bottom: 30, left: screenWidth/4 };
+                var width = actualWidth - margin.left - margin.right;
+                var height = actualHeight - margin.top - margin.bottom;
+
+                // 使用数据的长度除以10来确定要绘制多少个图表
+                var numCharts = Math.ceil(filteredData.length / 8);
+
+                // 创建一个容器来容纳所有的图表
+            
+                var container = d3.select("#chart")
+                                .append("div") 
+                var svg = container.append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                //x軸顯示資料
+                var x = d3.scaleLinear()
+                    .domain([0, d3.max(filteredData, function (d) { return d3.sum(keys, function (key) { return +d[key]; }); })])
+                    .nice()
+                    .range([0,width]);
+
+                var y =d3.scaleBand()
+                    .domain(filteredData.map(function (d) {return d.name; }))
+                    .range([0, height])
+                    .padding(0.1);
+
+                var color = d3.scaleOrdinal()
+                    .domain(keys)
+                    .range(d3.schemeCategory10);
+
+                var stack = d3.stack()
+                    .keys(keys);
+
+                var stackedData = stack(filteredData);
+
+                //console.log(stackedData)
+                svg.selectAll("g")
+                    .data(stackedData)
+                    .enter().append("g")
+                    .attr("fill", function (d) {return color(d.key);})
+                    .attr("data-key",function(d){ return d.key})
+                    .selectAll("rect")
+                    .data(function (d) {return d; })
+                    .enter().append("rect")
+                    .attr("x", function (d) {return x(d[0]); })
+                    .attr("y", function (d) {return y(d.data.name); })
+                    .attr("height", y.bandwidth())
+                    .attr("width", function (d) { return x(d[1]) - x(d[0]); })
+                    .on("mouseover", function (d) {
+                        // 鼠标悬停时的处理  
+                        var key = this.parentNode.getAttribute("data-key");
+                        d3.select(this)
+                            .attr("fill", "black"); // 选定的矩形条可以在鼠标悬停时更改颜色
+                        value = d.data[key]
+                        svg.append("text")
+                        .attr("x", x(d[0] + (d[1] - d[0]) / 2))
+                        .attr("y", y(d.data.name) + y.bandwidth() / 2)
+                        .attr("dy", ".35em")
+                        .style("text-anchor", "middle")
+                        .attr("id","mouseover")
+                        .attr("fill", "red")
+                        .text("Value: " + value);
+                    })
+                    .on("mouseout", function () {
+                        // 鼠标移出时的处理
+                        var key = this.parentNode.getAttribute("data-key");
+                        d3.select(this)
+                            .attr("fill", function (d) {return color(key); }); // 恢复原始颜色
+                            svg.selectAll("text")
+                            .filter(function() {
+                                return this.id === "mouseover";
+                            })
+                            .remove();
+                    });
+
+                // 添加軸
+                svg.append("g")
+                    .attr("class", "x-axis")
+                    .attr("transform", "translate(0," + height  + ")")
+                    .call(d3.axisBottom(x));
+
+                svg.append("g")
+                    .attr("class", "y-axis")
+                    .call(d3.axisLeft(y).ticks(5));
+             
+                    
+            }
+            var filteredData = []
+     
+            // 載入CSV數據
+            d3.csv("http://vis.lab.djosix.com:2023/data/TIMES_WorldUniversityRankings_2024.csv", function(error, data) {
+                if (error) throw error;
+                console.log(data)
+                // 使用d3.nest对数据进行分类
+                var keys = ["scores_teaching", "scores_research", "scores_citations", "scores_industry_income", "scores_international_outlook"]
+                var groupedData = d3.nest()
+                .key(function(d) {
+                    var rank = d.rank.toString(); // 将rank转换为字符串以便处理
+                    if (rank.match(/^[1-9]\d*$/)) {
+                    // 匹配以数字开头的rank值，如1、2、3
+                    return "1-200";
+                    } else if (rank.match(/^=[1-9]\d*$/)) {
+                    // 匹配以=和数字开头的rank值，如=3、=4
+                    return "1-200";
+                    } else if (rank.match(/\d+\D+\d+/)) {
+                        // 匹配形如201-400、401-600的rank值
+                        return rank;
+                    } else if (rank === "Reporter") {
+                    return "reporter";
+                    } else {
+                    // 其他情况，如1501+
+                    return "1501+";
+                    }
+                })
+                .entries(data)
+                //console.log(groupedData)
+                var buttonList = d3.select("#button-list");
+                // 创建可点击的按钮列表
+                var buttons = buttonList.selectAll("li")
+                    .data(groupedData)
+                    .enter()
+                    .append("li")
+                    .append("button") // 将文本列表更改为按钮
+                    .text(function(d) {
+                        return d.key;
+                    })
+                    .on("click", function(d) {
+                        //console.log(d)
+                        var selectedKey = d.key;
+                        if (selectedKey == "1-200"){
+                            filteredData = data.filter(function(dataPoint) {
+                                if(dataPoint.rank > 1 || dataPoint.rank < 200 || dataPoint.rank.includes("=")) {
+                                    return dataPoint.rank
+                                }     
+                            }); 
+                        }
+                        else{
+                            filteredData = data.filter(function(dataPoint) {
+                                return dataPoint.rank === selectedKey; // 根据选定的key筛选数据        
+                            });
+                        }
+                        //console.log("First build")
+                        createToolTips();
+                        createStackedBarChart();
+            
+                    });
+                var toggleButton = d3.select("#toggleButton");
+                // 初始状态为折叠
+                var isCollapsed = true;
+
+                // 监听折叠/展开按钮的点击事件
+                toggleButton.on("click", function() {
+                    if (isCollapsed) {
+                        buttonList.style("display", "block"); // 展开列表
+                        isCollapsed = false;
+                        toggleButton.text("摺疊"); // 更新按钮文本
+                    } else {
+                        buttonList.style("display", "none"); // 折叠列表
+                        isCollapsed = true;
+                        toggleButton.text("展開"); // 更新按钮文本
+                    }
+                });
+
+            });
+        </script>
+    </body>
+    </html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+<!-- Create a div where the graph will take place -->
+<style>
+   /* 样式提示框容器 */
+   .color-legend {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+  }
+
+  /* 样式颜色块 */
+  .color-box {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+  }
+
+  /* 样式颜色标签 */
+  .color-label {
+    font-size: 14px;
+    color: #333;
+  }
+</style>
+<div>
+  <label for="x-axis-select">X 軸屬性：</label>
+  <select id="x-axis-select">
+    <option value="sepal length">Sepal Length</option>
+    <option value="sepal width">Sepal Width</option>
+    <option value="petal length">Petal Length</option>
+    <option value="petal width">Petal Width</option>
+  </select>
+  <br>
+  <label for="y-axis-select">Y 軸屬性：</label>
+  <select id="y-axis-select">
+    <option value="sepal length">Sepal Length</option>
+    <option value="sepal width">Sepal Width</option>
+    <option value="petal length">Petal Length</option>
+    <option value="petal width">Petal Width</option>
+  </select>
+</div>
+<div class="color-legend">
+  <div class="color-box" style="background-color: #F8766D;"></div>
+  <div class="color-label">setosa</div>
+</div>
+<div class="color-legend">
+  <div class="color-box" style="background-color: #00BA38;"></div>
+  <div class="color-label">versicolor</div>
+</div>
+<div class="color-legend">
+  <div class="color-box" style="background-color: #619CFF;"></div>
+  <div class="color-label">virginica</div>
+</div>
+<div id="my_dataviz"></div>
+<script>
+
+    // Function to update the scatter plot based on user selection
+    function updateScatterPlot(xAttribute, yAttribute) {
+      // Your existing code for rendering the scatter plot here, but use xAttribute and yAttribute instead of fixed attributes.
+    }
+
+    // set the dimensions and margins of the graph
+    var margin = {top: 10, right: 30, bottom: 40, left: 50},
+        width = 520 - margin.left - margin.right,
+        height = 520 - margin.top - margin.bottom;
+    
+    // append the svg object to the body of the page
+    var svg = d3.select("#my_dataviz")
+      .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform",
+              "translate(" + margin.left + "," + margin.top + ")")
+    
+    // Add the grey background that makes ggplot2 famous
+    svg
+      .append("rect")
+        .attr("x",0)
+        .attr("y",0)
+        .attr("height", height)
+        .attr("width", height)
+        .style("fill", "EBEBEB")
+    
+    //Read the data
+    d3.csv("http://vis.lab.djosix.com:2023/data/iris.csv", function(data) {
+      // console.log(data)
+      data = data.filter(function(item) {
+        // 检查 sepal length 是否为空
+        return item['sepal length'] !== '';
+      });
+      // Function to render the scatter plot
+      function renderScatterPlot(xAttribute, yAttribute) {
+        // Add X axis
+        var x = d3.scaleLinear()
+          .domain([d3.min(data, function(d) { return d[xAttribute]; }) * 0.95, d3.max(data, function(d) { return d[xAttribute]; }) * 1.001])
+          .range([ 0, width ])
+        svg.select(".x-axis").remove(); // Remove the old X axis
+        svg.append("g")
+          .attr("class", "x-axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(x).tickSize(-height*1.3).ticks(10))
+          .select(".domain").remove()
+    
+        // Add Y axis
+        var y = d3.scaleLinear()
+          .domain([d3.min(data, function(d) { return d[yAttribute]; }) * 0.95, d3.max(data, function(d) { return d[yAttribute]; }) * 1.01])
+          .range([ height, 0])
+          .nice()
+        svg.select(".y-axis").remove(); // Remove the old Y axis
+        svg.append("g")
+          .attr("class", "y-axis")
+          .call(d3.axisLeft(y).tickSize(-width*1.3).ticks(7))
+          .select(".domain").remove()
+    
+        // Customization
+        svg.selectAll(".tick line").attr("stroke", "white")
+    
+        // Add X axis label:
+        svg.select(".x-axis-label").remove(); // Remove the old X axis label
+        svg.append("text")
+          .attr("class", "x-axis-label")
+          .attr("text-anchor", "end")
+          .attr("x", width/2 + margin.left)
+          .attr("y", height + margin.top + 20)
+          .text(xAttribute);
+    
+        // Y axis label:
+        svg.select(".y-axis-label").remove(); // Remove the old Y axis label
+        svg.append("text")
+          .attr("class", "y-axis-label")
+          .attr("text-anchor", "end")
+          .attr("transform", "rotate(-90)")
+          .attr("y", -margin.left + 20)
+          .attr("x", -margin.top - height/2 + 20)
+          .text(yAttribute)
+    
+        // Color scale: give me a specie name, I return a color
+        var color = d3.scaleOrdinal()
+          .domain(["Iris-setosa", "Iris-versicolor", "Iris-virginica" ])
+          .range([ "#F8766D", "#00BA38", "#619CFF"])
+    
+        // Add dots
+        svg.select(".dots-group").remove(); // Remove the old dots group
+        var dots = svg.append('g')
+          .attr("class", "dots-group")
+          .selectAll("dot")
+          .data(data)
+          .enter()
+          .append("circle")
+            .attr("cx", function (d) { return x(d[xAttribute]); } )
+            .attr("cy", function (d) { return y(d[yAttribute]); } )
+            .attr("r", 5)
+            .style("fill", function (d) { return color(d.class) } )
+      }
+    
+      // Initial rendering
+      renderScatterPlot("sepal length", "sepal length");
+    
+      // Listen for changes in the select boxes and re-render the plot
+      d3.select("#x-axis-select").on("change", function() {
+        var selectedXAttribute = d3.select(this).property("value");
+        renderScatterPlot(selectedXAttribute, d3.select("#y-axis-select").property("value"));
+      });
+    
+      d3.select("#y-axis-select").on("change", function() {
+        var selectedYAttribute = d3.select(this).property("value");
+        renderScatterPlot(d3.select("#x-axis-select").property("value"), selectedYAttribute);
+      });
+    
+    })
+</script>

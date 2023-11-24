@@ -1,0 +1,289 @@
+<!-- Code from d3-graph-gallery.com -->
+<!DOCTYPE html>
+<meta charset="utf-8">
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+<!-- Create a div where the graph will take place -->
+<div id="my_dataviz"></div>
+<!-- A bit of style -->
+<style>
+  .axis {
+    opacity: 0.4;
+  }
+  .axis:hover {
+    opacity: 1;
+  }
+  /* 添加阴影和圆角 */
+  .draggable {
+    cursor: grab;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 8px;
+    margin: 4px;
+  }
+
+  /* 添加悬停效果 */
+  .draggable:hover {
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    background-color: #f5f5f5;
+  }
+
+  /* 拖动时的样式 */
+  .dragging {
+    transform: scale(1.05);
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+  }
+  /* 样式描述文本 */
+  .description {
+    font-size: 16px; /* 增大文字大小 */
+    font-weight: bold; /* 加粗文字 */
+    color: #333; /* 设置文字颜色 */
+    background-color: #ffcc00; /* 设置背景颜色 */
+    padding: 10px; /* 添加内边距 */
+    border-radius: 5px; /* 圆角边框 */
+    margin-top: 10px; /* 设置顶部外边距 */
+    text-align: center; /* 文字居中对齐 */
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2); /* 添加阴影效果 */
+    transition: background-color 0.2s, color 0.2s; /* 添加过渡效果 */
+  }
+
+  /* 鼠标悬停时的样式 */
+  .description:hover {
+    background-color: #ff9900; /* 鼠标悬停时的背景颜色 */
+    color: #fff; /* 鼠标悬停时的文字颜色 */
+  }
+  /* 样式提示框容器 */
+  .color-legend {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+  }
+
+  /* 样式颜色块 */
+  .color-box {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+  }
+
+  /* 样式颜色标签 */
+  .color-label {
+    font-size: 14px;
+    color: #333;
+  }
+
+  /* 鼠标悬停时的样式 */
+  .color-legend:hover .color-box {
+    border-width: 2px;
+  }
+
+  /* 提示框样式 */
+  .color-tooltip {
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 5px;
+    border-radius: 5px;
+    z-index: 1;
+    display: none;
+  }
+
+  /* 显示提示框 */
+  .color-legend:hover .color-tooltip {
+    display: block;
+  }
+
+</style>
+
+<div class="color-legend">
+  <div class="color-box" style="background-color: #440154ff;"></div>
+  <div class="color-label">setosa</div>
+</div>
+<div class="color-legend">
+  <div class="color-box" style="background-color: #21908dff;"></div>
+  <div class="color-label">versicolor</div>
+</div>
+<div class="color-legend">
+  <div class="color-box" style="background-color: #fde725ff;"></div>
+  <div class="color-label">virginica</div>
+</div>
+
+<div id="drag-container">
+  <ul id="dimension-list">
+    <li class="draggable" data-dimension="sepal length">Sepal_Length</li>
+    <li class="draggable" data-dimension="sepal width">Sepal_Width</li>
+    <li class="draggable" data-dimension="petal length">Petal_Length</li>
+    <li class="draggable" data-dimension="petal width">Petal_Width</li>
+  </ul>
+  <div class="description">透過移動上面的格子，來修改平行座標圖</div>
+</div>
+
+
+<script>
+
+  // set the dimensions and margins of the graph
+  var margin = {top: 30, right: 50, bottom: 10, left: 50},
+    width = 460 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
+  // append the svg object to the body of the page
+  var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+  // Color scale: give me a specie name, I return a color
+  var color = d3.scaleOrdinal()
+    .domain(["Iris-setosa", "Iris-versicolor", "Iris-virginica" ])
+    .range([ "#440154ff", "#21908dff", "#fde725ff"])
+  // Here I set the list of dimension manually to control the order of axis:
+  dimensions = ["sepal length", "sepal width", "petal length", "petal width"]
+
+  // Parse the Data
+  function update(){
+      d3.csv("http://vis.lab.djosix.com:2023/data/iris.csv", function(data) {
+      data = data.filter(function(item) {
+        // 检查 sepal length 是否为空
+        return item['sepal length'] !== '';
+      });
+      // console.log(data)
+      // For each dimension, I build a linear scale. I store all in a y object
+      svg.selectAll(".axis").remove();
+      svg.selectAll(".line").remove();
+      var y = {}
+      for (i in dimensions) {
+        name = dimensions[i]
+        y[name] = d3.scaleLinear()
+          .domain( [0,8] ) // --> Same axis range for each group
+          // --> different axis range for each group --> .domain( [d3.extent(data, function(d) { return +d[name]; })] )
+          .range([height, 0])
+      }
+      // Build the X scale -> it find the best position for each Y axis
+      x = d3.scalePoint()
+        .range([0, width])
+        .domain(dimensions);
+
+      // Highlight the specie that is hovered
+      var highlight = function(d){
+        selected_specie = d.class
+        // first every group turns grey
+        d3.selectAll(".line")
+          .transition().duration(200)
+          .style("stroke", "lightgrey")
+          .style("opacity", "0.2")
+        // Second the hovered specie takes its color
+        d3.selectAll("." + selected_specie)
+          .transition().duration(200)
+          .style("stroke", color(selected_specie))
+          .style("opacity", "1")
+      }
+
+      // Unhighlight
+      var doNotHighlight = function(d){
+        d3.selectAll(".line")
+          .transition().duration(200).delay(1000)
+          .style("stroke", function(d){ return( color(d.class))} )
+          .style("opacity", "1")
+      }
+      // console.log(x(p), y[p](d[p]));
+      // The path function take a row of the csv as input, and return x and y coordinates of the line to draw for this raw.
+      function path(d) {
+          return d3.line()(dimensions.map(function(p) {return [x(p), y[p](d[p])]; }));
+      }
+      // Draw the lines
+      svg
+        .selectAll("myPath")
+        .data(data)
+        .enter()
+        .append("path")
+          .attr("class", function (d) { return "line " + d.class } ) // 2 class for each line: 'line' and the group name
+          .attr("d",  path)
+          .style("fill", "none" )
+          .style("stroke", function(d){ return(color(d.class))} )
+          .style("opacity", 0.5)
+          .on("mouseover", highlight)
+          .on("mouseleave", doNotHighlight )
+
+      // Draw the axis:
+      svg.selectAll("myAxis")
+        // For each dimension of the dataset I add a 'g' element:
+        .data(dimensions).enter()
+        .append("g")
+        .attr("class", "axis")
+        // I translate this element to its right position on the x axis
+        .attr("transform", function(d) { return "translate(" + x(d) + ")"; })
+        // And I build the axis with the call function
+        .each(function(d) { d3.select(this).call(d3.axisLeft().ticks(5).scale(y[d])); })
+        // Add axis title
+        .append("text")
+          .style("text-anchor", "middle")
+          .attr("y", -9)
+          .text(function(d) { return d; })
+          .style("fill", "black")  
+    })
+  }
+  // 获取所有可拖动元素
+  update()
+  const draggables = document.querySelectorAll('.draggable');
+  const dimensionList = d3.select('#dimension-list');
+
+
+  draggables.forEach(draggable => {
+    d3.select(draggable)
+      .attr("draggable", "true")
+      .on("dragstart", function() {
+        d3.select(this).classed("dragging", true);
+      })
+      .on("dragend", function() {
+        d3.select(this).classed("dragging", false);
+      });
+  });
+  // 获取容器
+  let draggingTimeout; // 用于延迟更新
+
+  // 设置拖放事件
+  dimensionList.on("dragover", function() {
+    d3.event.preventDefault();
+    const afterElement = getDragAfterElement(dimensionList.node(), d3.event.clientY);
+    const draggable = d3.select('.dragging');
+    if (!afterElement) {
+      dimensionList.append(() => draggable.node());
+    } else {
+      afterElement.parentNode.insertBefore(draggable.node(), afterElement);
+    }
+
+    // 清除之前的定时器
+    clearTimeout(draggingTimeout);
+
+    // 创建一个新的定时器来延迟更新 dimensions 数组
+    draggingTimeout = setTimeout(() => {
+      // 更新 dimensions 数组的顺序
+      const newDimensions = Array.from(dimensionList.node().querySelectorAll('.draggable')).map(d => d.dataset.dimension);
+      dimensions = newDimensions;
+      // console.log(dimensions)
+      update()
+    }, 10); // 延迟 500 毫秒（根据需要调整延迟时间）
+  });
+
+  // 获取拖动元素的插入位置
+  function getDragAfterElement(container, y) {
+    const draggableElements = Array.from(container.querySelectorAll('.draggable:not(.dragging)'));
+
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+
+      if (offset < 0 && offset > closest.offset) {
+        return { offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
+</script>

@@ -1,0 +1,61 @@
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  background-color: #f0f0f0;
+  padding: 3px;
+  margin: 5px;
+  cursor: grab;
+}
+
+li:active {
+  cursor: grabbing;
+  background-color: #ccc;
+}
+.rect {
+  width: 20px;
+  height: 600px;
+}
+.node rect {
+  cursor: move;
+  fill-opacity: .9;
+  shape-rendering: crispEdges;
+}
+
+.node text {
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff;
+}
+h1 {
+  text-align: center; /* 文本水平居中对齐 */
+}
+
+.link {
+  fill: none;
+  stroke: #000;
+  stroke-opacity: .2;
+}
+
+.link:hover {
+  stroke-opacity: .5;
+}
+div.tooltip {
+  position: absolute;
+  text-align: left;
+  width: 120px;
+  height: 50px;
+  padding: 10px;
+  font: 10px sans-serif;
+  background: lightblue;
+  border: 0px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+.legend-color-box {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  margin-right: 5px;
+}

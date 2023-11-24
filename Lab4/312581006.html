@@ -1,0 +1,245 @@
+<html>
+<head>
+<meta charset="UTF-8"/>
+<script src="http://d3js.org/d3.v4.min.js"></script>
+<style>
+    /* 样式提示框 */
+    .tooltip {
+        position: fixed;
+            background-color: #fa3;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            bottom: 10px; /* 距离底部的距离 */
+            right: 10px; /* 距离右侧的距离 */
+            z-index: 999; /* 确保在最前面 */
+    }
+</style>
+</head>
+<body>
+    <h1 style="text-align: center;">Lab4 Brushable Scatter Plot Matrix</h1>
+    <div class="tooltip">
+        透過刷子圈選散點圖中的數據點，其他圖中對應的數據點就會跟著顯示出來
+    </div>
+    <script>
+    
+        var size = 180;
+        var padding = 20;
+        var binCount = 10;
+        d3.csv("http://vis.lab.djosix.com:2023/data/iris.csv",function(error,data){
+
+            
+            var columns = data.columns.filter(d => d!= "class");
+            data = data.filter(function(item) {
+                // 检查 sepal length 是否为空
+                return item['sepal length'] !== '';
+            });
+            //console.log((data));
+            
+            var svg = d3.select("body")
+                        .append("svg")
+                        .attr("width",size*columns.length+padding)
+                        .attr("height",size*columns.length+padding)
+                        .append("g")
+                        .attr("transform","translate("+padding+",0)");
+            
+            //x轴比例尺
+            var xScale = columns.map(c => d3.scaleLinear()
+                                            .domain(d3.extent(data,d => d[c]))
+                                            .range([padding/2,size-padding/2]));
+            
+            //y轴比例尺
+            var yScale = columns.map(c => d3.scaleLinear()
+                                .domain(d3.extent(data,d => d[c]))
+                                .range([size-padding/2,padding/2]));
+            
+            //x坐标轴
+            var xAxis = d3.axisBottom()
+                        .ticks(6)
+                        .tickSize(size*columns.length);
+            
+            var x = svg.append("g")
+                    .selectAll("g")
+                    .data(xScale)
+                    .enter()
+                    .append("g")
+                    .attr("transform",(d,i) => "translate("+size*i+",0)")
+                    .each(function(d){
+                            return d3.select(this).call(xAxis.scale(d));
+                        });
+            
+            x.select(".domain").remove();
+            x.selectAll(".tick line").attr("stroke","#ddd");
+            
+            //y坐标轴
+            var yAxis = d3.axisLeft()
+                        .ticks(6)
+                        .tickSize(-size*columns.length);
+            
+            var y = svg.append("g")
+                    .selectAll("g")
+                    .data(yScale)
+                    .enter()
+                    .append("g")
+                    .attr("transform",(d,i) => "translate(0,"+size*i+")")
+                    .each(function(d){
+                            return d3.select(this).call(yAxis.scale(d));
+                        });
+                        
+            y.select(".domain").remove();
+            y.selectAll(".tick line").attr("stroke","#ddd");
+            
+            //颜色比例尺
+            var colors = d3.scaleOrdinal()
+                        .domain(data.map(d => d.class))
+                        .range(d3.schemeCategory10);
+            
+            //为每个散点图单元分配一个组
+            var cell = svg.append("g")
+                        .selectAll("g")
+                        .data(d3.cross(d3.range(columns.length),d3.range(columns.length)))
+                        .enter()
+                        .append("g")
+                        .attr("transform",([i,j]) => "translate("+i*size+","+j*size+")");
+                        
+                        
+            
+            //绘制每个散点图的方格
+            cell.append("rect")
+                .attr("fill","none")
+                .attr("stroke","#aaa")
+                .attr("x",padding/2)
+                .attr("y",padding/2)
+                .attr("width",size-padding)
+                .attr("height",size-padding);
+            
+            //绘制散点
+            cell.each(function([i,j]){
+                //console.log([i,j])
+                if(i != j){
+                    d3.select(this)
+                    .selectAll("circle")
+                    .data(data)
+                    .enter()
+                    .append("circle")
+                    .attr("cx",d => xScale[i](d[columns[i]]))
+                    .attr("cy",d => yScale[j](d[columns[j]]))
+                    .attr("r",3.5)
+                    .attr("fill-opacity",0.7)
+                    .attr("fill",d => colors(d.class));
+                }
+                else{
+                // 绘制直方图
+                    
+                    var histXScale = d3.scaleLinear()
+                    .domain(d3.extent(data, d => d[columns[i]]))
+                    .range([padding / 2, size - padding / 2])
+                    .nice();
+
+                    var thresholds = histXScale.ticks(10); // 生成刻度
+
+                    // 移除thresholds中的最后一个阈值
+                    thresholds = thresholds.slice(0, -1);
+
+                    var bins = d3.histogram()
+                    .domain(histXScale.domain())
+                    .thresholds(thresholds)(data.map(d => d[columns[i]]));
+
+                    //console.log(bins.length)
+                    var yMax = d3.max(bins, d => d.length);
+                    var histYScale = d3.scaleLinear()
+                        .domain([0, yMax])
+                        .range([size - padding / 2, padding / 2]);
+                
+                    var barWidth = (size - padding) / bins.length - 1;
+            
+                    // console.log(bins)
+                
+                    var bars = d3.select(this).selectAll(".bar")
+                        .data(bins)
+                        .enter()
+                        .append("g")
+                        .attr("class", "bar")
+                        .attr("transform", d => "translate(" + histXScale(d.x0) + "," + histYScale(d.length) + ")");
+
+                    bars.append("rect")
+                        .attr("x", 1)
+                        .attr("width", barWidth)
+                        .attr("height", d => size - padding / 2 - histYScale(d.length))
+                        .attr("fill", "#cac");
+
+                    bars.append("text")
+                        .attr("dy", "-.75em")
+                        .attr("y", 6)
+                        .attr("x", barWidth / 2)
+                        .attr("text-anchor", "middle")
+                        .text(d => d.length > 0 ? d.length : "");
+                }
+            
+            });
+            
+            var circle = cell.selectAll("circle");
+            
+            //加标注
+            svg.append("g")
+            .style("font","bold 10px sans-serif")
+            .selectAll("text")
+            .data(columns)
+            .enter()
+            .append("text")
+            .attr("transform",(d,i) => "translate("+i*size+","+i*size+")")
+            .attr("x",padding)
+            .attr("y",padding)
+            .attr("dy",".71em")
+            .text(d => d);
+            
+            //刷子
+            var brush = d3.brush()
+                        .extent([[padding/2,padding/2],[size-padding/2,size-padding/2]]);
+            
+            cell.call(brush);
+                
+            var brushCell;
+            
+            //清除之前刷出的区域
+            brush.on("start",function(){
+                if(brushCell != this){
+                    d3.select(brushCell).call(brush.move,null);
+                    brushCell = this;
+                }
+            });
+            
+            //突出显示选择的散点
+            brush.on("brush",function([i,j]){
+                if(d3.event.selection == null || i==j) 
+                    return;
+            
+            
+                const [[x0,y0],[x1,y1]] = d3.event.selection;
+                
+                circle.attr("fill",function(d){
+                    return xScale[i](d[columns[i]])<x0
+                        || xScale[i](d[columns[i]])>x1
+                        || yScale[j](d[columns[j]])<y0
+                        || yScale[j](d[columns[j]])>y1
+                        ?"#ccc":colors(d.class);
+                });
+            });
+            
+            //当刷子的选择为空时，取消突出显示
+            brush.on("end",function(){
+                if(d3.event.selection != null)
+                    return;
+                    
+                circle.attr("fill",d => colors(d.class));
+            });
+            
+            
+
+        });
+
+    </script>
+</body>
+
+
+</html>

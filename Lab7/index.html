@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang = "en">
+    <head>
+        <meta charset = "utf-8">
+        <title>Horizon Chart</title>
+        <link rel="stylesheet" type="text/css" href="style.css"> 
+    </head>
+    <style>
+
+    </style>
+    <body>     
+        <h1>Lab 6</h1>
+        <h3>確認圖表配置</h3>
+        
+        <div class="input-container">
+            <label for="yearSelect">選擇年份:</label>
+            <select id="yearSelect">
+                <option value="all">ALL</option>
+                <option value="2017">2017</option>
+                <option value="2018">2018</option>
+                <option value="2019">2019</option>
+            </select>
+            <label for="bandSelect">選擇bands:</label>
+            <select id="bandSelect">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+            </select>
+            <button id="confirmButton">確認</button>
+        </div>
+        
+
+        <!-- 提示框 -->
+        <div class="tooltip">
+       
+            <p><strong>顏色對應屬性:</strong></p>
+            <ul>
+                <li><span style="color: #1f77b4;">■</span> SO2</li>
+                <li><span style="color: #2ca02c;">■</span> NO2</li>
+                <li><span style="color: #7f7f7f;">■</span> O3</li>
+                <li><span style="color: #ff7f0e;">■</span> CO</li>
+                <li><span style="color: #9467bd;">■</span> PM10</li>
+                <li><span style="color: #8c564b;">■</span> PM2.5</li>
+            </ul>
+        </div>
+        <div id="chart-container"></div>
+        
+        <script src="https://d3js.org/d3.v7.js"></script>  
+        <script src = "horizonChart.js"></script>
+        <script>
+              
+            drawHorizonChart("http://vis.lab.djosix.com:2023/data/air-pollution.csv", "all", 3);
+            const yearSelect = d3.select("#yearSelect");
+            const bandSelect = d3.select("#bandSelect");
+            const confirmButton = d3.select("#confirmButton");
+
+            confirmButton.on("click", function() {
+                const selectedYear = yearSelect.property("value");
+                const selectedBand = bandSelect.property("value");
+                
+                drawHorizonChart("http://vis.lab.djosix.com:2023/data/air-pollution.csv",selectedYear, selectedBand);
+            });
+
+ 
+        </script>
+    </body>
+</html>
+    

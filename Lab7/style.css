@@ -1,0 +1,70 @@
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    background-color: #f0f0f0;
+    padding: 10px;
+    margin: 5px;
+    cursor: grab;
+}
+
+li:active {
+    cursor: grabbing;
+    background-color: #ccc;
+}
+.rect {
+    width: 20px;
+    height: 600px;
+}
+
+div.tooltip {
+    position: absolute;
+    text-align: left;
+    width: 120px;
+    height: 50px;
+    padding: 10px;
+    font: 10px sans-serif;
+    background: lightblue;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+}
+
+.axis {
+    fill: none;
+    stroke: black;
+    stroke-width: 2px;
+}
+/* style.css */
+
+h1 {
+    text-align: center; /* 文本水平居中对齐 */
+}
+.input-container {
+    display: flex; /* 让元素水平排列在同一行内 */
+    align-items: center; /* 垂直居中对齐 */
+}
+
+.input-container label {
+    margin-right: 5px; /* 添加标签与选择框之间的右侧间距 */
+}
+
+.input-container select, .input-container button {
+    margin-right: 15px; /* 添加选择框和按钮之间的左侧间距 */
+}
+
+.tooltip {
+    position: fixed;
+    top: 10px; /* 距离顶部的距离 */
+    right: 10px; /* 距离右侧的距离 */
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+.color-marker {
+    font-size: 16px; /* 增加字体大小 */
+    margin-right: 5px; /* 添加右侧间距 */
+}

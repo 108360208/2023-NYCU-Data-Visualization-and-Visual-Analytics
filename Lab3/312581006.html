@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Similarity Matrix Heatmap</title>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <style>
+        /* 添加样式以调整热图的外观 */
+        .heatmap rect {
+            stroke: #fff;
+            stroke-width: 2;
+        }
+        .heatmap text {
+            fill: black;
+            font-size: 12px;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+        .heatmap {
+            margin-bottom: 20px;
+        }
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+       
+  
+    </style>
+</head>
+<body>
+
+<div class="heatmap-container">
+    <h2>Male Correlation Matrix</h2>
+    <div class="heatmap" id="male-heatmap"></div>
+</div>
+<div class="heatmap-container">
+    <h2>Female Correlation Matrix</h2>
+    <div class="heatmap" id="female-heatmap"></div>
+</div>
+
+<div class="heatmap-container">
+    <h2>Infant Correlation Matrix</h2>
+    <div class="heatmap" id="infant-heatmap"></div>
+</div>
+
+<script>
+
+
+    function calculateCorrelationMatrix(data) {
+        data = data.map(row => row.slice(1).map(Number));
+        const numCols = data[0].length;
+        const numRows = data.length;
+        const matrix = new Array(numCols).fill(0).map(() => new Array(numCols).fill(0));
+
+        for (let i = 0; i < numCols; i++) {
+            for (let j = 0; j < numCols; j++) {
+                const col1 = data.map(row => row[i]);
+                const col2 = data.map(row => row[j]);
+                const mean1 = d3.mean(col1);
+                const mean2 = d3.mean(col2);
+                const stdDev1 = d3.deviation(col1);
+                const stdDev2 = d3.deviation(col2);
+
+                let sum = 0;
+                for (let k = 0; k < numRows; k++) {
+                    sum += (col1[k] - mean1) * (col2[k] - mean2);
+                }
+
+                matrix[i][j] = sum / (stdDev1 * stdDev2 * (numRows - 1));
+            }
+        }
+
+        return matrix;
+    }
+
+    d3.text("http://vis.lab.djosix.com:2023/data/abalone.data", function (data) {
+        lines = data.split("\n")
+
+        var male = []
+        var female = []
+        var infant = []
+        lines.forEach(element => {
+            element = element.split(",")
+            if (element[0] == "M") {
+                male.push(element)
+            } else if (element[0] == "F") {
+                female.push(element)
+            } else {
+                infant.push(element)
+            }
+        });
+
+        var alldata = {}
+        const maledata = calculateCorrelationMatrix(male);
+        const femaledata = calculateCorrelationMatrix(female);
+        const infantdata = calculateCorrelationMatrix(infant);
+        alldata["male"] = maledata
+        alldata["female"] = femaledata
+        alldata["infant"] = infantdata
+
+        var attributes = [
+            "Length",
+            "Diameter",
+            "Height",
+            "Whole weight",
+            "Shucked weight",
+            "Viscera weight",
+            "Shell weight",
+            "Rings"
+        ];
+
+        var width = 400;
+        var height = 400;
+
+        // 创建三个独立的容器来分别显示热图
+        Object.keys(alldata).forEach(function (key) {
+             
+            var arr = d3.range(101)
+            var colorScale = d3.scaleSequential(d3.interpolateViridis)
+                .domain([0 ,1]); // 根据相似度范围来选择颜色
+            var svg = d3.select("#" + key + "-heatmap")
+                .append("svg")
+                .attr("width", width + 150) // 增加宽度以容纳左侧和下方标签
+                .attr("height", height + 150); // 增加高度以容纳左侧和下方标签
+            var heatmap = svg.selectAll(".heatmap")
+                .data(alldata[key])
+                .enter()
+                .append("g")
+                .attr("class", "heatmap")
+                .attr("transform", function (d, i) {
+                    return "translate("+width/4+"," + (i * (height / alldata[key].length) + 50) + ")"; // 调整偏移以容纳左侧和下方标签
+                });
+
+            heatmap.selectAll("rect")
+                .data(function (d) {
+                    return d;
+                })
+                .enter()
+                .append("rect")
+                .attr("x", function (d, i) {
+                    return i * (width / alldata[key][0].length);
+                })
+                .attr("width", width / alldata[key][0].length)
+                .attr("height", height / alldata[key].length)
+                .style("fill", function (d) {
+                    return colorScale(d);
+                });
+
+            // 在格子内显示相似度的值
+            heatmap.selectAll("text")
+                .data(function (d) {
+                    return d;
+                })
+                .enter()
+                .append("text")
+                .attr("x", function (d, i) {
+                    return i * (width / alldata[key][0].length) + (width / alldata[key][0].length) / 2;
+                })
+                .attr("y", height / (2 * alldata[key].length))
+                .text(function (d) {
+                    return d.toFixed(2);
+                });
+        svg.selectAll(".col-label")
+            .data(attributes)
+            .enter()
+            .append("text")
+            .attr("class", "col-label")
+            .attr("x", function (d, i) {
+                return i * (width / attributes.length) + (width / attributes.length) / 2 + 80;
+            })
+            .attr("y", height + 75)
+            .text(function (d) {
+                return d;
+            })
+            .style("text-anchor", "middle") // 将文本的水平对齐方式设置为中间
+            .style("dominant-baseline", "middle") // 将文本的垂直对齐方式设置为中间
+            .attr("transform", function (d, i) {
+                // 旋转文本以垂直显示
+                return "rotate(-90 " + (i * (width / attributes.length) + (width / attributes.length) / 2 + 100) + "," + (height + 75) + ")";
+            });
+
+
+        // 添加左侧属性标签
+        svg.selectAll(".row-label")
+            .data(attributes)
+            .enter()
+            .append("text")
+            .attr("class", "row-label")
+            
+            .attr("x", width/5) // 调整x坐标以适应左侧
+            .attr("y", function (d, i) {
+                return i * (height / attributes.length) + (height / attributes.length) / 2 + height/8;
+            })
+            .text(function (d) {
+                return d;
+            })
+            .style("text-anchor", "end")
+            .style("dominant-baseline", "middle");
+                // 在右侧绘制颜色渐变图
+        var gradient = svg.append("defs")
+            .append("linearGradient")
+            .attr("id", "colorGradient")
+            .attr("x1", "100%")
+            .attr("y1", "100%")
+            .attr("x2", "100%")
+            .attr("y2", "0%");
+
+        gradient.selectAll("stop")
+            .data(d3.range(0, 1.1, 0.1)) // 这里设置了颜色渐变的范围，从0到1，间隔0.1
+            .enter()
+            .append("stop")
+            .attr("offset", function (d) {
+                return d * 100 + "%";
+            })
+            .attr("stop-color", function (d) {
+                return colorScale(d);
+            });
+
+        svg.append("rect")
+            .attr("width", 20) // 矩形的宽度，可以根据需要调整
+            .attr("height", height) // 矩形的高度，与热图高度一致
+            .style("fill", "url(#colorGradient)") // 使用渐变填充
+            .attr("x", width+110) // 将矩形放在热图的右侧
+            .attr("y", 50); // 从顶部开始绘制
+        // 添加刻度标签
+        var tickValues = d3.range( 1.0 , -0.1, -0.2); // 刻度值范围，0到1，间隔0.2
+       
+        svg.selectAll(".tick-label")
+            .data(tickValues)
+            .enter()
+            .append("text")
+            .attr("class", "tick-label")
+            .attr("x", width + 150 ) // 刻度标签的横坐标，略左于矩形
+            .attr("y", function (d) {
+                return 50 +  (1 - d) * height; // 刻度标签的纵坐标，根据刻度值确定位置
+            })
+            .text(function (d) {
+                //console.log(d)
+                return d.toFixed(1); // 设置刻度标签的文本内容，保留1位小数
+            })
+            .style("font-size", "12px") // 设置刻度标签的字体大小
+            .style("text-anchor", "end"); // 设置刻度标签的水平对齐方式
+        });
+        
+    })
+
+</script>
+</body>
+</html>
