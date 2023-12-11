@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <h2 style="color: white; font-size: 30px;">	
+      Top and bottom ten songs by popularity.
+    </h2>
+    <div id="home" class="button_cont" align="center"><a class="example_e" href="add-website-here" target="_blank" rel="nofollow noopener">Home</a></div>
+
+
+
+    <script type="text/javascript">
+        document.getElementById("home").onclick = function () {
+            location.href = "../index.html";
+        };
+    </script>
+
+
+</head>
+
+<style type="text/css">
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+
+    body {
+          background-image: url('../img/background1.jpg');
+          background-repeat: no-repeat;
+          background-attachment: fixed;
+          background-size: cover;
+          text-align: center;
+          font-family: 'Verdana',sans-serif;
+
+        }
+
+    .footer {
+        color: #777777;
+        font-size: 13px;
+        text-align: right;
+    }
+
+    #states path {
+      fill: rgb(105, 104, 104);
+      stroke: #fff;
+      stroke-width: 0.7px;
+      fill-opacity: .8;
+    }
+
+    circle {
+      fill: #ffd700;
+      fill-opacity: .6;
+      stroke: #fff;
+    }
+
+
+    circle {
+      stroke-width: 0.8px;
+      stroke: rgb(20, 20, 20);
+      opacity: .8
+    }
+    circle:hover {
+      stroke: yellow;
+    }
+
+  .example_e {
+    background: #191919;
+    border: 1px double #cccccc;
+    color: #eeeeee;
+    font-size: 21px;
+    font-family: sans-serif;
+    font-weight: 500;
+    padding: 6px;
+    width: 150px;
+    text-transform: uppercase;
+    border-radius: 30px;
+    display: inline-block;
+    transition: all 0.3s ease 0s;
+    margin: 5px;
+    }
+
+    .sort_but {
+    background: #191919;
+    border: 1px double #cccccc;
+    color: #eeeeee;
+    font-size: 21px;
+    font-family: sans-serif;
+    font-weight: 500;
+    padding: 6px;
+    width: 300px;
+    text-transform: uppercase;
+    border-radius: 30px;
+    display: inline-block;
+    transition: all 0.3s ease 0s;
+    margin: 5px;
+    }
+    .sort_but:hover {
+    color: #404040 ;
+    font-weight: 700 ;
+    letter-spacing: 3px;
+    background: white;
+    -webkit-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+    -moz-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+    transition: all 0.3s ease 0s;
+    }
+
+  .example_e:hover {
+    color: #404040 ;
+    font-weight: 700 ;
+    letter-spacing: 3px;
+    background: white;
+    -webkit-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+    -moz-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+    transition: all 0.3s ease 0s;
+    }
+
+
+
+</style>
+
+<body>
+
+<ul id="button-list"></ul>    
+
+<div id="tooltips"></div>
+<div id="chart"></div>
+<!-- <div id="legend" style="position: fixed; top: 20px; right: 20px; background-color: white; padding: 10px; border: 1px solid #ccc;">
+    <h4>Legend</h4>
+    <ul id="legend-list"></ul>
+</div> -->
+
+
+
+
+
+<script type="text/javascript">
+
+            function createlegend(keys){
+              var color = d3.scaleOrdinal()
+                  .domain(keys)
+                  .range(d3.schemeCategory10);
+
+              var legendData = [
+                  { category: "Teaching", color: color("scores_teaching") },
+                  { category: "Research", color: color("scores_research") },
+                  { category: "Citations", color: color("scores_citations") },
+                  { category: "Industry Income", color: color("scores_industry_income") },
+                  { category: "International Outlook", color: color("scores_international_outlook") }
+                  ];
+  
+                  var legendContainer = d3.select("#legend-list");
+
+              var legendItems = legendContainer
+              .selectAll("li")
+              .data(legendData)
+              .enter()
+              .append("li");
+              
+              legendItems
+              .append("span")
+              .style("background-color", function(d) {
+                  return d.color;
+              })
+              .classed("legend-color-box", true);
+
+              legendItems
+              .append("span")
+              .text(function(d) {
+                  console.log(d.category)
+                  return d.category;
+              });
+
+            }
+            function createToolTips() {
+                var keys = ["top10", "bottom10"];
+                var currentSortKey = keys[0]; // 初始排序键
+                var isAscending = true; // 初始排序顺序
+                console.log(bottom10)
+                // 创建按钮
+                d3.select("#tooltips")
+                    .selectAll("button")
+                    .data(keys)
+                    .enter()
+                    .append("button")
+                    .attr("class","sort_but")
+                    .attr("data-key", function(d) { return d; })
+                    .text(function(d) { return d; })
+                    .on('click', function() {
+                      //if key is top10, then sort by popularity
+                      //if key is bottom10, then sort by popularity
+                      if (this.getAttribute("data-key") == "top10") {          
+                        filteredData = top10;
+                        createStackedBarChart(); 
+                      } else {
+                        console.log("bottom10")
+                        console.log(bottom10)
+                        filteredData = bottom10; 
+                        createStackedBarChart(bottom10);
+                      }
+                      
+                    });
+            }
+
+            function createStackedBarChart() {
+                d3.select("#chart").html("");
+                // 獲取用戶螢幕寬度和高度
+                var screenWidth = window.innerWidth;
+                var screenHeight = window.innerHeight;
+                var ratio_in_screen = 3 / 4;
+                
+                actualWidth = ratio_in_screen * screenWidth;
+                actualHeight = filteredData.length * screenHeight/15 ;
+                // var keys = ["scores_teaching", "scores_research", "scores_citations", "scores_industry_income", "scores_international_outlook"];
+                var keys = ["popularity"]
+                // createlegend(keys)
+                var margin = { top: 30, right: 30, bottom: 30, left: screenWidth/4 };
+                var width = actualWidth - margin.left - margin.right;
+                var height = actualHeight - margin.top - margin.bottom;
+                
+                // 使用数据的长度除以10来确定要绘制多少个图表
+                var numCharts = Math.ceil(filteredData.length / 8);
+
+                // 创建一个容器来容纳所有的图表
+            
+                var container = d3.select("#chart")
+                                .append("div") 
+                var svg = container.append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                //x軸顯示資料
+                var x = d3.scaleLinear()
+                    .domain([0, d3.max(filteredData, function (d) { return d3.sum(keys, function (key) { return +d[key]; }); })])
+                    .nice()
+                    .range([0,width]);
+
+                var y =d3.scaleBand()
+                    .domain(filteredData.map(function (d) {return d.track_name; }))
+                    .range([0, height])
+                    .padding(0.1);
+
+                var color = d3.scaleOrdinal()
+                    .domain(keys)
+                    .range(d3.schemeCategory10);
+
+                var stack = d3.stack()
+                    .keys(keys);
+
+                var stackedData = stack(filteredData);
+                console.log(stackedData)
+                
+                svg.selectAll("g")
+                    .data(stackedData)
+                    .enter().append("g")
+                    .attr("fill", function (d) {return color(d.key);})
+                    .attr("data-key",function(d){ return d.key})
+                    .selectAll("rect")
+                    .data(function (d) {return d; })
+                    .enter().append("rect")
+                    .attr("x", function (d) {return x(d[0]); })
+                    .attr("y", function (d) {return y(d.data.track_name); })
+                    .attr("height", y.bandwidth())
+                    .attr("width", function (d) { return x(d[1]) - x(d[0]); })
+                    .on("mouseover", function (d) {
+                        // 鼠标悬停时的处理  
+                        var key = this.parentNode.getAttribute("data-key");
+                        d3.select(this)
+                            .attr("fill", "black"); // 选定的矩形条可以在鼠标悬停时更改颜色
+                        popularity = d.data[key]
+                        artist = d.data["artists"]
+                        svg.append("text")
+                        .attr("x", x(d[0] + (d[1] - d[0]) / 2))
+                        .attr("y", y(d.data.track_name) + y.bandwidth() / 2)
+                        .attr("dy", ".35em")
+                        .style("text-anchor", "middle")
+                        .attr("id","mouseover")
+                        .attr("fill", "red")
+                        .text(artist+": " + popularity);
+                    })
+                    .on("mouseout", function () {
+                        // 鼠标移出时的处理
+                        var key = this.parentNode.getAttribute("data-key");
+                        d3.select(this)
+                            .attr("fill", function (d) {return color(key); }); // 恢复原始颜色
+                            svg.selectAll("text")
+                            .filter(function() {
+                                return this.id === "mouseover";
+                            })
+                            .remove();
+                    });
+
+                // 添加軸
+                svg.append("g")
+                    .attr("class", "x-axis")
+                    .attr("transform", "translate(0," + height  + ")")
+                    .call(d3.axisBottom(x));
+
+                svg.append("g")
+                    .attr("class", "y-axis")
+                    .call(d3.axisLeft(y).ticks(5));
+             
+                    
+            }
+            var filteredData = []
+            var bottom10 = []
+            // 載入CSV數據
+            d3.csv("../data/dataset.csv", function(error, data) {
+                if (error) throw error;
+                //delete data row which track_name is repeated
+                var groupedData = d3.nest()
+                    .key(function(d) { return d.track_name; })
+                    .entries(data);
+                //convert groupedData to array  
+                data = groupedData.map(function(d) { return d.values[0]; });
+                //sort data by popularity
+                data.sort(function(a, b) {
+                    return b.popularity - a.popularity;
+                });
+                //console.log(groupedData)
+                var buttonList = d3.select("#button-list");
+        
+                
+                top10 = data.slice(0, 10);
+                data.sort(function(a, b) {
+                    return a.popularity - b.popularity;
+                });
+                // console.log(data)
+
+                bottom10 = data.slice(0, 10);
+                filteredData = top10;
+                //console.log("First build")
+                createToolTips();
+                createStackedBarChart();
+            });
+
+</script>
+
+
+
+</body>
+
+</html>

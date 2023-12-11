@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="../src/d3.layout.cloud.js"></script>
+<style type="text/css"></style>
+
+ <div id="home" class="button_cont" align="center"><a class="example_e" href="add-website-here" target="_blank" rel="nofollow noopener">Home</a></div>
+
+
+
+<script type="text/javascript">
+    document.getElementById("home").onclick = function () {
+        location.href = "../index.html";
+    };
+</script>
+
+<style>
+
+    body {
+      background-image: url('../img/test.jpg');
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-size: cover;
+      text-align: center;
+      font-family: 'Verdana',sans-serif
+    }
+    .legend {
+        border: 1px solid #555555;
+        border-radius: 5px 5px 5px 5px;
+        font-size: 0.8em;
+        margin: 10px;
+        padding: 8px;
+    }
+    .bld {
+        font-weight: bold;
+    }
+
+    .example_e {
+        background: #191919;
+        border: 1px double #cccccc;
+        color: #eeeeee;
+        font-size: 21px;
+        font-family: sans-serif;
+        font-weight: 500;
+        padding: 6px;
+        width: 150px;
+        text-transform: uppercase;
+        border-radius: 30px;
+        display: inline-block;
+        transition: all 0.3s ease 0s;
+        margin: 5px;
+        }
+
+    .example_e:hover {
+        color: #404040 ;
+        font-weight: 700 ;
+        letter-spacing: 3px;
+        background: white;
+        -webkit-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+        -moz-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+        transition: all 0.3s ease 0s;
+        }
+        
+    div.tooltip {
+        position: absolute;
+        text-align: center;
+        padding: 10px;
+        background: green;
+        color: white;
+        border-radius: 5px;
+        pointer-events: none;
+        }  
+</style>
+<body>
+    <h2 style="color: white; font-size: 30px;">	
+      Popular Words in 114000 Song's Names 
+      </h2>
+  </body>
+  <script>
+  
+      var frequency_list =[{"text": "ghost", "size": 114}, {"text": "acoustic", "size": 291}, {"text": "falling", "size": 129}, {"text": "love", "size": 2510}, {"text": "hold", "size": 193}, {"text": "days", "size": 221}, {"text": "remember", "size": 101}, {"text": "say", "size": 251}, {"text": "something", "size": 203},  {"text": "give", "size": 174}, {"text": "forever", "size": 218}, {"text": "solo", "size": 139}, {"text": "bad", "size": 322}, {"text": "baby", "size": 557}, {"text": "winter", "size": 144}, {"text": "want", "size": 274}, {"text": "christmas", "size": 1925}, {"text": "real", "size": 137}, {"text": "good", "size": 544}, {"text": "party", "size": 243}, {"text": "one", "size": 687}, {"text": "lonely", "size": 128}, {"text": "time", "size": 779}, {"text": "rock", "size": 345}, {"text": "mind", "size": 280}, {"text": "people", "size": 140}, {"text": "ocean", "size": 101}, {"text": "far", "size": 104}, {"text": "away", "size": 287}, {"text": "better", "size": 236}, {"text": "rain", "size": 400}, {"text": "sky", "size": 186}, {"text": "still", "size": 210}, {"text": "blue", "size": 346}, {"text": "stop", "size": 137}, {"text": "always", "size": 137}, {"text": "alone", "size": 218}, {"text": "things", "size": 198}, {"text": "new", "size": 322}, {"text": "mine", "size": 116}, {"text": "wanna", "size": 196}, {"text": "live", "size": 1449}, {"text": "easy", "size": 108}, {"text": "end", "size": 190}, {"text": "light", "size": 259}, {"text": "long", "size": 219}, {"text": "road", "size": 123}, {"text": "without", "size": 235}, {"text": "heart", "size": 525}, {"text": "house", "size": 218}, {"text": "never", "size": 418}, {"text": "please", "size": 101}, {"text": "heaven", "size": 202}, {"text": "bells", "size": 135}, {"text": "day", "size": 499}, {"text": "see", "size": 158}, {"text": "somebody", "size": 141}, {"text": "ver", "size": 165}, {"text": "beautiful", "size": 187}, {"text": "girl", "size": 370}, {"text": "deep", "size": 173}, {"text": "piano", "size": 361}, {"text": "living", "size": 121}, {"text": "know", "size": 366}, {"text": "death", "size": 169}, {"text": "head", "size": 176}, {"text": "born", "size": 113}, {"text": "like", "size": 764}, {"text": "mr", "size": 135}, {"text": "let", "size": 794}, {"text": "go", "size": 646}, {"text": "version", "size": 1665}, {"text": "come", "size": 417}, {"text": "get", "size": 423}, {"text": "pt", "size": 311}, {"text": "music", "size": 199}, {"text": "original", "size": 841}, {"text": "kiss", "size": 126}, {"text": "sleep", "size": 216}, {"text": "us", "size": 214}, {"text": "make", "size": 248}, {"text": "feel", "size": 411}, {"text": "boy", "size": 253}, {"text": "gone", "size": 197}, {"text": "tonight", "size": 155}, {"text": "hard", "size": 110}, {"text": "sun", "size": 268}, {"text": "need", "size": 199}, {"text": "sea", "size": 110}, {"text": "take", "size": 336}, {"text": "back", "size": 398}, {"text": "song", "size": 774}, {"text": "story", "size": 153}, {"text": "con", "size": 165}, {"text": "soul", "size": 160}, {"text": "night", "size": 622}, {"text": "la", "size": 1594}, {"text": "believe", "size": 108}, {"text": "home", "size": 454}, {"text": "na", "size": 486}, {"text": "world", "size": 488}, {"text": "perfect", "size": 119}, {"text": "girls", "size": 120}, {"text": "together", "size": 136}, {"text": "around", "size": 204}, {"text": "ever", "size": 105}, {"text": "sugar", "size": 107}, {"text": "hand", "size": 111}, {"text": "last", "size": 466}, {"text": "dance", "size": 389}, {"text": "track", "size": 154}, {"text": "thing", "size": 134}, {"text": "friends", "size": 128}, {"text": "year", "size": 116}, {"text": "got", "size": 273}, {"text": "est", "size": 124}, {"text": "si", "size": 239}, {"text": "dream", "size": 279}, {"text": "little", "size": 715}, {"text": "two", "size": 151}, {"text": "hey", "size": 198}, {"text": "first", "size": 255}, {"text": "way", "size": 422}, {"text": "goodbye", "size": 127}, {"text": "could", "size": 112}, {"text": "happy", "size": 209}, {"text": "stars", "size": 115}, {"text": "call", "size": 203}, {"text": "sweet", "size": 218}, {"text": "side", "size": 143}, {"text": "cold", "size": 202}, {"text": "big", "size": 206}, {"text": "man", "size": 473}, {"text": "tell", "size": 138}, {"text": "high", "size": 252}, {"text": "stay", "size": 246}, {"text": "oh", "size": 189}, {"text": "leave", "size": 137}, {"text": "lights", "size": 160}, {"text": "look", "size": 133}, {"text": "single", "size": 408}, {"text": "slow", "size": 106}, {"text": "waves", "size": 148}, {"text": "lost", "size": 216}, {"text": "keep", "size": 115}, {"text": "eyes", "size": 258}, {"text": "save", "size": 102}, {"text": "wish", "size": 156}, {"text": "river", "size": 121}, {"text": "kill", "size": 104}, {"text": "made", "size": 102}, {"text": "right", "size": 183}, {"text": "fall", "size": 203}, {"text": "merry", "size": 240}, {"text": "white", "size": 220}, {"text": "place", "size": 107}, {"text": "best", "size": 138}, {"text": "hai", "size": 195}, {"text": "god", "size": 310}, {"text": "waiting", "size": 112}, {"text": "di", "size": 149}, {"text": "life", "size": 607}, {"text": "dancing", "size": 112}, {"text": "theme", "size": 257}, {"text": "broken", "size": 143}, {"text": "dreams", "size": 178}, {"text": "friend", "size": 111}, {"text": "hot", "size": 127}, {"text": "nothing", "size": 188}, {"text": "sound", "size": 164}, {"text": "sad", "size": 119}, {"text": "mountain", "size": 107}, {"text": "feeling", "size": 142}, {"text": "-", "size": 336}, {"text": "moon", "size": 205}, {"text": "mono", "size": 136}, {"text": "mix", "size": 1712}, {"text": "morning", "size": 132}, {"text": "crazy", "size": 121}, {"text": "wild", "size": 114}, {"text": "young", "size": 161}, {"text": "devil", "size": 151}, {"text": "boys", "size": 107}, {"text": "woman", "size": 149}, {"text": "die", "size": 354}, {"text": "black", "size": 336}, {"text": "tree", "size": 171}, {"text": "coming", "size": 148}, {"text": "dark", "size": 194}, {"text": "angel", "size": 141}, {"text": "old", "size": 171}, {"text": "control", "size": 116}, {"text": "radio", "size": 793}, {"text": "edit", "size": 1138}, {"text": "open", "size": 146}, {"text": "wind", "size": 134}, {"text": "arr", "size": 144}, {"text": "play", "size": 104}, {"text": "blues", "size": 144}, {"text": "power", "size": 123}, {"text": "king", "size": 169}, {"text": "roll", "size": 137}, {"text": "hell", "size": 153}, {"text": "instrumental", "size": 172}, {"text": "child", "size": 101}, {"text": "alive", "size": 133}, {"text": "run", "size": 481}, {"text": "miss", "size": 110}, {"text": "body", "size": 159}, {"text": "ya", "size": 162}, {"text": "midnight", "size": 121}, {"text": "de", "size": 2718}, {"text": "te", "size": 719}, {"text": "pra", "size": 311}, {"text": "al", "size": 209}, {"text": "vida", "size": 219}, {"text": "mais", "size": 155}, {"text": "uma", "size": 104}, {"text": "vai", "size": 129}, {"text": "da", "size": 565}, {"text": "dia", "size": 118}, {"text": "amor", "size": 754}, {"text": "sol", "size": 155}, {"text": "amar", "size": 104}, {"text": "es", "size": 256}, {"text": "dos", "size": 110}, {"text": "dub", "size": 109}, {"text": "city", "size": 158}, {"text": "em", "size": 282}, {"text": "train", "size": 102}, {"text": "lo", "size": 215}, {"text": "los", "size": 214}, {"text": "mi", "size": 439}, {"text": "mundo", "size": 103}, {"text": "por", "size": 335}, {"text": "un", "size": 376}, {"text": "ride", "size": 153}, {"text": "en", "size": 838}, {"text": "como", "size": 177}, {"text": "du", "size": 199}, {"text": "nada", "size": 135}, {"text": "extended", "size": 293}, {"text": "que", "size": 785}, {"text": "dil", "size": 135}, {"text": "voc", "size": 325}, {"text": "show", "size": 150}, {"text": "el", "size": 921}, {"text": "eu", "size": 482}, {"text": "vou", "size": 124}, {"text": "money", "size": 117}, {"text": "del", "size": 293}, {"text": "tu", "size": 410}, {"text": "red", "size": 211}, {"text": "water", "size": 126}, {"text": "para", "size": 193}, {"text": "una", "size": 161}, {"text": "um", "size": 251}, {"text": "le", "size": 197}, {"text": "mar", "size": 109}, {"text": "club", "size": 188}, {"text": "ao", "size": 2884}, {"text": "vivo", "size": 3159}, {"text": "casa", "size": 101}, {"text": "brown", "size": 117}, {"text": "fire", "size": 319}, {"text": "reprise", "size": 145}, {"text": "remastered", "size": 1244}, {"text": "mim", "size": 149}, {"text": "se", "size": 513}, {"text": "jesus", "size": 111}, {"text": "santa", "size": 209}, {"text": "great", "size": 102}, {"text": "move", "size": 105}, {"text": "das", "size": 158}, {"text": "free", "size": 163}, {"text": "walk", "size": 137}, {"text": "ti", "size": 249}, {"text": "qu", "size": 147}, {"text": "las", "size": 160}, {"text": "stereo", "size": 108}, {"text": "everything", "size": 183}, {"text": "les", "size": 114}, {"text": "yo", "size": 132}, {"text": "rio", "size": 101}, {"text": "suite", "size": 106}, {"text": "mixed", "size": 169}, {"text": "blood", "size": 146}, {"text": "quiero", "size": 105}, {"text": "another", "size": 128}, {"text": "follow", "size": 104}, {"text": "change", "size": 121}, {"text": "summer", "size": 250}, {"text": "name", "size": 172}, {"text": "sin", "size": 123}, {"text": "snow", "size": 251}, {"text": "dead", "size": 253}, {"text": "gonna", "size": 133}, {"text": "remaster", "size": 585}, {"text": "war", "size": 144}, {"text": "star", "size": 149}, {"text": "cry", "size": 156}, {"text": "town", "size": 119}, {"text": "part", "size": 156}, {"text": "noche", "size": 117}, {"text": "vez", "size": 172}, {"text": "tudo", "size": 122}, {"text": "ac", "size": 258}, {"text": "stico", "size": 216}, {"text": "ii", "size": 242}, {"text": "ser", "size": 136}, {"text": "os", "size": 209}, {"text": "soundtrack", "size": 315}, {"text": "enough", "size": 110}, {"text": "remasterizado", "size": 125}, {"text": "halloween", "size": 136}, {"text": "noise", "size": 185}, {"text": "hate", "size": 139}, {"text": "bwv", "size": 143}, {"text": "minor", "size": 128}, {"text": "iii", "size": 126}, {"text": "allegro", "size": 119}, {"text": "op", "size": 331}, {"text": "flat", "size": 108}, {"text": "lofi", "size": 197}, {"text": "sonata", "size": 103}, {"text": "main", "size": 139}, {"text": "dj", "size": 176}, {"text": "major", "size": 221}, {"text": "cut", "size": 103}, {"text": "space", "size": 112}, {"text": "ich", "size": 154}, {"text": "mein", "size": 108}, {"text": "der", "size": 208}, {"text": "anthem", "size": 109}, {"text": "ne", "size": 101}, {"text": "frosty", "size": 105}, {"text": "snowman", "size": 122}, {"text": "rudolph", "size": 222}, {"text": "meu", "size": 229}, {"text": "deus", "size": 165}, {"text": "minha", "size": 113}, {"text": "cora", "size": 114}, {"text": "feliz", "size": 126}, {"text": "variations", "size": 104}, {"text": "variation", "size": 105}, {"text": "ho", "size": 103}, {"text": "claus", "size": 111}, {"text": "act", "size": 282}, {"text": "cast", "size": 158}, {"text": "mo", "size": 111}, {"text": "tum", "size": 117}]
+      // var frequency_list = [{"text":"study","size":40},{"text":"motion","size":15},{"text":"forces","size":10},{"text":"electricity","size":15},{"text":"movement","size":10},{"text":"relation","size":5},{"text":"things","size":10},{"text":"force","size":5},{"text":"ad","size":5},{"text":"energy","size":85},{"text":"living","size":5},{"text":"nonliving","size":5},{"text":"laws","size":15},{"text":"speed","size":45},{"text":"velocity","size":30},{"text":"define","size":5},{"text":"constraints","size":5},{"text":"universe","size":10},{"text":"physics","size":120},{"text":"describing","size":5},{"text":"matter","size":90},{"text":"physics-the","size":5},{"text":"world","size":10},{"text":"works","size":10},{"text":"science","size":70},{"text":"interactions","size":30},{"text":"studies","size":5},{"text":"properties","size":45},{"text":"nature","size":40},{"text":"branch","size":30},{"text":"concerned","size":25},{"text":"source","size":40},{"text":"google","size":10},{"text":"defintions","size":5},{"text":"two","size":15},{"text":"grouped","size":15},{"text":"traditional","size":15},{"text":"fields","size":15},{"text":"acoustics","size":15},{"text":"optics","size":15},{"text":"mechanics","size":20},{"text":"thermodynamics","size":15},{"text":"electromagnetism","size":15},{"text":"modern","size":15},{"text":"extensions","size":15},{"text":"thefreedictionary","size":15},{"text":"interaction","size":15},{"text":"org","size":25},{"text":"answers","size":5},{"text":"natural","size":15},{"text":"objects","size":5},{"text":"treats","size":10},{"text":"acting","size":5},{"text":"department","size":5},{"text":"gravitation","size":5},{"text":"heat","size":10},{"text":"light","size":10},{"text":"magnetism","size":10},{"text":"modify","size":5},{"text":"general","size":10},{"text":"bodies","size":5},{"text":"philosophy","size":5},{"text":"brainyquote","size":5},{"text":"words","size":5},{"text":"ph","size":5},{"text":"html","size":5},{"text":"lrl","size":5},{"text":"zgzmeylfwuy","size":5},{"text":"subject","size":5},{"text":"distinguished","size":5},{"text":"chemistry","size":5},{"text":"biology","size":5},{"text":"includes","size":5},{"text":"radiation","size":5},{"text":"sound","size":5},{"text":"structure","size":5},{"text":"atoms","size":5},{"text":"including","size":10},{"text":"atomic","size":10},{"text":"nuclear","size":10},{"text":"cryogenics","size":10},{"text":"solid-state","size":10},{"text":"particle","size":10},{"text":"plasma","size":10},{"text":"deals","size":5},{"text":"merriam-webster","size":5},{"text":"dictionary","size":10},{"text":"analysis","size":5},{"text":"conducted","size":5},{"text":"order","size":5},{"text":"understand","size":5},{"text":"behaves","size":5},{"text":"en","size":5},{"text":"wikipedia","size":5},{"text":"wiki","size":5},{"text":"physics-","size":5},{"text":"physical","size":5},{"text":"behaviour","size":5},{"text":"collinsdictionary","size":5},{"text":"english","size":5},{"text":"time","size":35},{"text":"distance","size":35},{"text":"wheels","size":5},{"text":"revelations","size":5},{"text":"minute","size":5},{"text":"acceleration","size":20},{"text":"torque","size":5},{"text":"wheel","size":5},{"text":"rotations","size":5},{"text":"resistance","size":5},{"text":"momentum","size":5},{"text":"measure","size":10},{"text":"direction","size":10},{"text":"car","size":5},{"text":"add","size":5},{"text":"traveled","size":5},{"text":"weight","size":5},{"text":"electrical","size":5},{"text":"power","size":5}];
+  
+  
+      // var color = d3.scale.linear()
+      //         .domain([12,15,18,20,35,45,65,85,100,200,300])
+      //         .range(["#333", "#484848", "#4e4e4e", "#626262", "#777", "#8c8c8c", "#a2a2a2", "#b9b9b9", "#d0d0d0", "#e7e7e7", "#fefefa", "#fff"]);
+  
+      var fill = d3.scale.category20c();
+  
+      d3.layout.cloud().size([1100, 600])
+              .timeInterval(20)
+              .words(frequency_list)
+              .spiral("archimedean")
+              .text(function(d) { return d.text.toLowerCase(); })
+              .fontSize(function(d) { return Math.round(Math.pow(d.size, 0.8)/5); })
+              // .rotate(function() { return ~~(Math.random() * 2) * 10; })
+              .rotate(0)
+              .font('Impact')
+              .on("end", draw)
+              .start();
+  
+      function draw(words) {
+        var div = d3.select("body").append("div")
+                    .attr("class", "tooltip")
+                    .style("opacity", 0);             
+
+          d3.select("body").append("svg")
+                  .attr("width", 1200)
+                  .attr("height", 800)
+                  .attr("class", "wordcloud")
+                  .append("g")
+                  // without the transform, words words would get cutoff to the left and top, they would
+                  // appear outside of the SVG area
+                  .attr("transform", "translate(600,300)")
+                  .selectAll("text")
+                  .data(words)
+                  .enter().append("text")
+                  .style("font-size", function(d) { return d.size + "px"; })
+                  // .style("fill", function(d, i) { return color(i); })
+                  .style("fill", function(d, i) { return fill(i); })
+                  .style("font-family", 'Impact')
+                  .attr("text-anchor", "middle")
+                  .attr("transform", function(d) {
+                      return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                  })
+                  .text(function(d) { return d.text.toLowerCase(); })
+                  
+                  .on('mouseover', function (d, i) {
+                      d3.select(this).transition()
+                        .duration('50')
+                        .attr('opacity', '.8');
+                        
+                        div.transition()
+                            .duration(50)
+                            .style("opacity", 1);
+                        let num = Math.round(Math.pow(d.size * 5, 1/0.8)).toString() + ' times';
+                        div.html(num)
+                           .style("left", (d3.event.pageX + 10) + "px")
+                           .style("top", (d3.event.pageY - 15) + "px");
+                    })
+                  
+                  .on('mouseout', function (d, i) {
+                      d3.select(this).transition()
+                        .duration('50')
+                        .attr('opacity', '1');
+                      div.transition()
+                        .duration('50')
+                        .style("opacity", 0);});
+
+      }
+  </script>
+  <!-- 
+  <div style="width: 140%;">
+      <div class="legend">
+          Commonly used words are larger and slightly faded in color.  Less common words are smaller and darker.
+      </div>
+  
+  </div> -->
+  
+
+</html>

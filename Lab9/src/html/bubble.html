@@ -1,0 +1,527 @@
+<!-- Code from d3-graph-gallery.com -->
+<!DOCTYPE html>
+<meta charset="utf-8">
+    
+
+<!-- Google fonts -->
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300' rel='stylesheet' type='text/css'>
+<link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<!-- Load color scale -->
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+
+
+<body>
+  <h2 style="color: white; font-size: 30px;"> 
+      Interactive Bubble Chart for Song Popularity, Dancebility and Valance
+  </h2>
+  </body>
+
+<div id="home" class="button_cont" align="center"><a class="example_e" href="add-website-here" target="_blank" rel="nofollow noopener">Home</a></div>
+<div class="container">
+
+</div>
+
+<!-- <div class="container">
+  <input id="SearchArtists" type="text" size="20" />
+  <div id="searchButton">
+    <button onclick="dropdownChange()">查詢</button>
+  </div>
+
+  <ul id="suggestionsList"></ul>
+</div> -->
+<script type="text/javascript">
+    document.getElementById("home").onclick = function () {
+        location.href = "../index.html";
+    };
+</script>
+
+
+</script>
+<div id="my_dataviz"></div>
+
+<!-- A bit of CSS: change stroke color of circle on hover (white -> black) -->
+
+
+<style>
+select { position: absolute; left: 1000px; top: 180px; font: 50px; width: 150px;height: 45px;}
+.container {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    left: 20;
+  }
+    #searchButton {
+    margin-left: 5px;  /* 設置適當的邊距 */
+  }
+#SearchArtists {
+    display: inline-block;
+    background-color: white;
+    border-radius: 30px;
+    text-align: center;
+    border: solid 1px #6E6E6E;
+    height: 30px;
+    font-size: 20px;
+}
+
+#suggestionsList {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    width: 200px;
+    border: 1px solid #ccc;
+    background-color: white;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+#suggestionsList li {
+    padding: 10px;
+    background-color: white;
+    cursor: pointer;
+
+    /* 其他樣式屬性 */
+}
+.axisWhite line{
+  stroke: rgb(201, 201, 201);
+}
+
+.axisWhite path{
+  stroke: rgb(201, 201, 201);
+}
+
+.axisWhite text{
+  fill: rgb(201, 201, 201);
+}  
+
+.dot {
+  stroke-width: 0.8px;
+  stroke: rgb(88, 88, 88);
+  opacity: .8
+}
+.dot:hover {
+  stroke: yellow;
+}
+
+
+body {
+  
+      background-image: url('../img/test.jpg');
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-size: cover;
+      text-align: center;
+      font-family: 'Verdana',sans-serif
+    }
+    
+ .example_e {
+        background: #191919;
+        border: 1px double #cccccc;
+        color: #eeeeee;
+        font-size: 21px;
+        font-family: sans-serif;
+        font-weight: 500;
+        padding: 6px;
+        width: 150px;
+        text-transform: uppercase;
+        border-radius: 30px;
+        display: inline-block;
+        transition: all 0.3s ease 0s;
+        margin: 5px;
+        }
+
+      .example_e:hover {
+        color: #404040 ;
+        font-weight: 700 ;
+        letter-spacing: 3px;
+        background: white;
+        -webkit-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+        -moz-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+        transition: all 0.3s ease 0s;
+        }
+
+
+
+</style>
+
+
+
+<script>
+
+
+  // set the dimensions and margins of the graph
+  var margin = {top: 20, right: 120, bottom: 60, left: 120},
+      width = 1000 - margin.left - margin.right,
+      height = 800 - margin.top - margin.bottom;
+
+
+  // append the svg object to the body of the page
+  var svg = d3.select("#my_dataviz")
+    .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+  svg.append("rect")
+      .attr("x", -80)
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .attr("fill", "white")
+        .attr("opacity", "0");
+  //title
+  svg.append("text")
+      .attr("x", (width + margin.left + margin.right-200)/2)             
+      .attr("y", -20)
+      .attr("text-anchor", "middle")  
+      .style("font-size", "27px")
+      // .text("Interactive Bubble Chart for Song Popularity, Dancebility and Valance")
+      .style("fill", "white")
+
+  // var myimage = svg.append('image')
+  //   .attr('xlink:href', 'https://1000logos.net/wp-content/uploads/2017/08/Spotify-Logo.png')
+  //   .attr('width', 100)
+  //   .attr('height', 100)
+  //   .attr("x", width )
+  //   .attr("y", 0)
+
+
+
+  var filename = "../data/dataset.csv"
+  function data_spilt(data){
+    const newData = [];
+
+    data.forEach(function(row) {
+      // 將 artists 欄位按分號拆分成陣列
+      const artistsArray = row.artists.split(';');
+
+      // 對於每個藝術家，創建一個新的行
+      artistsArray.forEach(function(artist) {
+        // 克隆原始行的數據，並將 artists 欄位替換為當前的藝術家
+        const newRow = { ...row, artists: artist };
+        
+        // 將新行添加到新的數據集中
+        newData.push(newRow);
+      });
+    });
+    return newData;
+  }
+  d3.csv(filename, function(data){
+      data = data_spilt(data);
+      
+      const artistsArray = data.flatMap(row => row.artists.split(';'));
+      const uniqueArtistsSet = new Set(artistsArray.filter(artist => artist));
+      const searchSuggestion = Array.from(uniqueArtistsSet);
+      var x = d3.scaleLinear()
+      .domain([0, 1])
+      .range([ 0, width ]);
+
+      svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .attr("class", "axisWhite")
+      .call(d3.axisBottom(x).ticks(5));
+
+      // Add X axis label:
+      svg.append("text")
+          .attr("text-anchor", "end")
+          .attr("x", width+50)
+          .attr("y", height+50 )
+          .attr("fill", "white")
+          .text("Danceability")
+          .style("font-size", 20)
+
+
+      // Add Y axis
+      var y = d3.scaleLinear()
+      .domain([0, 1])
+      .range([ height,50]);
+
+      svg.append("g")
+        .attr("class", "axisWhite")
+        .call(d3.axisLeft(y));
+
+      // Add Y axis label:
+      svg.append("text")
+          .attr("text-anchor", "end")
+          .attr("x", 0)
+          .attr("y", 40 )
+          .attr("fill", "white")
+          .text("Valance")
+          .attr("text-anchor", "start")
+          .style("font-size", 20);
+
+      // Add a scale for bubble size
+      var z = d3.scaleSqrt()
+      .domain([0, 100])
+      .range([ 2, 35]);
+
+      
+      var time_sig = ["0", "1", "2", "3", "4", "5", "6", "7"]
+      // Add a scale for bubble color
+      var myColor = d3.scaleOrdinal()
+      .domain(time_sig)
+      .range(d3.schemeSet3);
+      // https://github.com/d3/d3-scale-chromatic/blob/master/README.md#schemeSet1
+
+
+
+      // Add one dot in the legend for each name.
+      var size = 30
+      svg.selectAll("myrect")
+        .data(time_sig)
+        .enter()
+        .append("circle")
+          .attr("cx", 775)
+          .attr("cy", function(d,i){ return 100 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
+          .attr("r", 7)
+          .style("fill", function(d){ return myColor(d)})
+          .style("stroke", "rgb(88, 88, 88)")
+          .on("mouseover", highlight)
+          .on("mouseleave", noHighlight)
+
+      // Add labels beside legend dots
+      svg.selectAll("mylabels")
+        .data(time_sig)
+        .enter()
+        .append("text")
+          .attr("x", 780 + size*.8)
+          .attr("y", function(d,i){ return i * (size + 5) + 100}) // 100 is where the first dot appears. 25 is the distance between dots
+          .style("fill", function(d){ return myColor(d)})
+          .text(function(d){ return d})
+          .attr("text-anchor", "left")
+          .style("alignment-baseline", "middle")
+          .on("mouseover", highlight)
+          .on("mouseleave", noHighlight)
+
+          svg.append("text")
+          .attr("x", 700)
+          .attr("y", 380)
+          .style('font-size', 15)
+          .attr("fill", "white")
+          .text('Time Signature');
+
+
+
+      
+      var valuesToShow = [100, 50, 10]
+      var xCircle = 800
+      var xLabel = 850
+      svg
+        .selectAll("legend")
+        .data(valuesToShow)
+        .enter()
+        .append("circle")
+          .attr("cx", xCircle)
+          .attr("cy", function(d){ return height - 100 - z(d) } )
+          .attr("r", function(d){ return z(d) })
+          .style("fill", "#ffd700")
+          .attr("stroke", "rgb(65, 65, 65")
+
+      // Add legend: segments
+      svg
+        .selectAll("legend")
+        .data(valuesToShow)
+        .enter()
+        .append("line")
+          .attr('x1', function(d){ return xCircle + z(d) } )
+          .attr('x2', xLabel)
+          .attr('y1', function(d){ return height - 100 - z(d) } )
+          .attr('y2', function(d){ return height - 100 - z(d) } )
+          .attr('stroke', 'white')
+          .style('stroke-dasharray', ('2,2'))
+      // Add legend: labels
+      svg
+        .selectAll("legend")
+        .data(valuesToShow)
+        .enter()
+        .append("text")
+          .attr('x', xLabel)
+          .attr('y', function(d){ return height - 100 - z(d) } )
+          .text( function(d){ return d} )
+          .style("font-size", 10)
+          .style('fill', 'white')
+          .attr('alignment-baseline', 'middle')
+
+      // Legend title
+      svg.append("text")
+        .attr('x', xCircle)
+        .attr("y", height - 100 +30)
+        .style('fill', 'white')
+        .text("Popularity")
+        .attr("text-anchor", "middle")
+
+
+
+
+
+
+
+      var tooltip = d3.select("#my_dataviz")
+      .append("div")
+        .style("opacity", 0)	
+        .attr("class", "tooltip")
+        .style("position", "absolute")
+        .style("background-color", "green")
+        .style("border-radius", "5px")
+        .style("padding", "10px")
+        .style("color", "white")
+        .style("pointer-events", "none")
+
+    // -2- Create 3 functions to show / update (when mouse move but stay on same circle) / hide the tooltip
+    var showTooltip = function(d) {
+      tooltip
+        .transition()
+        .duration(200)
+      tooltip
+        .style("opacity", 1)
+        .style("left", (d3.event.pageX) + "px")		
+        .style("top", (d3.event.pageY - 28) + "px")	
+        .html("Track: " + d.track_name)
+    }
+    var hideTooltip = function(d) {
+      tooltip
+        .transition()
+        .duration(200)
+        .style("opacity", 0)
+    }
+
+
+    // ---------------------------//
+    //       HIGHLIGHT GROUP      //
+    // ---------------------------//
+
+    // What to do when one group is hovered
+    var highlight = function(d){
+      // reduce opacity of all groups
+      d3.selectAll(".bubbles").style("opacity", .05)
+      // expect the one that is hovered
+      d3.selectAll("."+d).style("opacity", 1)
+    }
+
+    // And when it is not hovered anymore
+    var noHighlight = function(d){
+      d3.selectAll(".bubbles").style("opacity", 1)
+    }
+
+    var updateDots = function(data) {
+
+        var dot = svg.selectAll(".dot").data(data)
+        dot.enter()
+        .append("circle")
+        .attr("class", "dot")
+        .attr("cx", function (d) { return x(d.danceability); } )
+        .attr("cy", function (d) { return y(d.liveness); } )
+        .attr("r", function (d) { return z(d.popularity); } )
+        .style("fill", function(d){return myColor(d.time_signature)} )
+        .on("mouseover", showTooltip )
+        .on("mouseleave", hideTooltip )
+
+
+        dot.exit().remove();
+        dot.transition().duration(600)
+        .attr("class", "dot")
+        .attr("cx", function (d) { return x(d.danceability); } )
+        .attr("cy", function (d) { return y(d.liveness); } )
+        .attr("r", function (d) { return z(d.popularity); } )
+        .style("fill", function(d){return myColor(d.time_signature)} )
+        .on("mouseover", showTooltip )
+        .on("mouseleave", hideTooltip )
+
+        dot.exit().remove();
+    };
+
+
+    var dropdownChange = function() {
+      var newartist = d3.select("#SearchArtists").property('value');
+      console.log("dsfsdf")
+      console.log(data.filter(function(d){return d.artists == newartist;}));
+      updateDots(data.filter(function(d){return d.artists == newartist;}));
+    };
+    d3.select(".container")
+    .append("input")
+    .attr("id", "SearchArtists")
+    .attr("type", "text")
+    .attr("size", "20")
+    .attr("placeholder", "Search Artists")
+
+    d3.select(".container")
+      .append("div")
+      .attr("id", "searchButton")
+      .append("button")
+      .text("查詢")
+      .on("click", dropdownChange);
+
+    // 列表用於顯示提示項
+    d3.select(".container")
+      .append("ul")
+      .attr("id", "suggestionsList");
+
+    // var dropdown = d3.select("#my_dataviz")
+    //                 .insert("select", "svg")
+    //                 .on("change", dropdownChange)
+    
+    // dropdown.selectAll("option")
+    //                 .data(artists)
+    //               .enter().append("option")
+    //                 .attr("value", function (d) { return d; })
+    //                 .text(function (d) {
+    //                     return d; 
+    //                 });
+    const input = document.getElementById('SearchArtists');
+        const suggestionsList = document.getElementById('suggestionsList');
+
+        // 监听输入框的输入事件
+        input.addEventListener('input', function () {
+            // 获取输入框的值
+            const inputText = this.value.toLowerCase();
+
+            // 清空列表
+            suggestionsList.innerHTML = '';
+
+            // 根据输入的值过滤提示项
+            const suggestions = searchSuggestion
+            suggestions
+                .filter(item => item.toLowerCase().includes(inputText))
+                .forEach(item => {
+                    // 创建li元素并添加到列表
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    suggestionsList.appendChild(li);
+                });
+
+            // 显示或隐藏列表
+            suggestionsList.style.display = suggestionsList.children.length > 0 ? 'block' : 'none';
+        });
+
+        // 监听列表项的点击事件
+        suggestionsList.addEventListener('click', function (event) {
+            if (event.target.tagName === 'LI') {
+                // 将点击的项的文本设置为输入框的值
+                input.value = event.target.textContent;
+
+                // 隐藏列表
+                suggestionsList.style.display = 'none';
+            }
+        });
+
+        // 监听点击页面其他地方的事件，用于隐藏列表
+        document.addEventListener('click', function (event) {
+            if (event.target !== input && event.target !== suggestionsList) {
+                suggestionsList.style.display = 'none';
+            }
+        });
+    var initialData = data.filter(function(d){return d.artists == "";});
+    updateDots(initialData);
+}
+)
+
+
+
+</script>
